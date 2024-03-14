@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9c0ecba5-c4fe-4904-bf74-404712c6c6b6" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<db:config name="Database_Config" doc:name="Database Config" doc:id="e7116db9-3134-4552-b477-1644808d846c" >
+		<db:generic-connection url="jdbc:postgresql://localhost:5432/postgres" driverClassName="org.postgresql.Driver" user="postgres" password="Mummy01$" />
+	</db:config>
+	<flow name="error-handlingFlow" doc:id="674d74e9-30ea-4d1d-85cb-34818c0f4dd0" >
+		<http:listener doc:name="Listener" doc:id="b3f73941-0228-47a7-8e39-774f7f81fc01" config-ref="HTTP_Listener_config" path="/errorHandle"/>
+		<logger level="INFO" doc:name="Logger" doc:id="f5c1cb71-2473-43c2-bff8-ccd829eca40b" message="getting Data"/>
+		<db:select doc:name="Select" doc:id="91a9a56e-b9da-4e66-95de-0fb1fff91c2a" config-ref="Database_Config">
+			<db:sql><![CDATA[SELECT id, fruite_b, place_harvest
+FROM public.orange;
+]]></db:sql>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="ce3ed4bd-9264-4700-b0fc-df6eb46cc7c8" message="got data"/>
+		<ee:transform doc:name="Transform Message" doc:id="87f57ce7-7670-46fd-b629-646dda5f298e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
