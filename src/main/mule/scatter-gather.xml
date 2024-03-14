@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd">
+	<db:config name="scatter" doc:name="Database Config" doc:id="747ac0e7-82ef-4532-b019-e51c79133d60" >
+		<db:generic-connection url="jdbc:postgresql://localhost:5432/postgres" driverClassName="org.postgresql.Driver" user="postgres" password="Mummy01$" />
+	</db:config>
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="a44a9910-764b-4b7b-85eb-88134d82a6ec" >
+		<http:listener-connection host="0.0.0.0" port="8074" />
+	</http:listener-config>
+	<flow name="scatter-gatherFlow" doc:id="cb3e8824-573e-430b-8e56-7e6adef522da" >
+		<http:listener doc:name="Listener" doc:id="6548771d-8b95-4803-ab2b-ce8b28801782" config-ref="HTTP_Listener_config" path="/scatterGather"/>
+		<logger level="INFO" doc:name="Start" doc:id="6fba9557-a01f-4e5e-9bbb-134b5ca6f24f" message="going to trigger the scatter gather"/>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="ee61fb0f-7c2d-4a90-bcdd-9b91f2b28d20" >
+			<route >
+				<logger level="INFO" doc:name="setpayload logger" doc:id="83133da0-2aa7-4ff5-aa9c-8e7181d7802a" message="going to trigger the ste pauload"/>
+				<set-payload doc:name="Set Payload" doc:id="a2f8e5f3-2f64-456f-a728-9964e415a591" value="hello world"/>
+			</route>
+			<route >
+				<logger level="INFO" doc:name="DbLogger" doc:id="b81213c2-91bb-4c69-b31c-d33c5811d89b" message="trigger the Db"/>
+				<db:select doc:name="Select" doc:id="70d20af1-b267-47b9-9b8f-79661c21db99" config-ref="scatter">
+					<db:sql ><![CDATA[SELECT id, fruite_b, place_harvest
+FROM public.orange order by id desc ;]]></db:sql>
+				</db:select>
+			</route>
+			<route >
+				<logger level="INFO" doc:name="Vars_Logger" doc:id="bc495e66-1c8e-4ed7-b1b3-5713b83ce6c5" message="variable payload"/>
+				<set-variable value="hello mulesoft" doc:name="Set Variable" doc:id="22c33ae0-b77c-48b3-a40b-e5572652d0c3" variableName="dcore" />
+				<ee:transform doc:name="Transform Message" doc:id="a63fb4d7-dd1e-41a2-ba34-67f148755d7e" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+vars.dcore]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</route>
+		</scatter-gather>
+		<logger level="INFO" doc:name="End Logger" doc:id="2f8b3158-a773-45ef-aaa1-abc8029b305a" message="#[payload]"/>
+		<ee:transform doc:name="Transform Message" doc:id="3a60a21f-05a8-4f7a-b9f5-ca0782038c40">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"data": payload
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>
